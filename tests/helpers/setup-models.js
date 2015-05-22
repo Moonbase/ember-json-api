@@ -4,13 +4,13 @@ function setModels(params) {
   var options;
 
   if (!params) {
-    params = {}
+    params = {};
   }
 
   options = {
     authorAsync: params.authorAsync || false,
     commentAsync: params.commentAsync || false
-  }
+  };
 
   Post = DS.Model.extend({
     title:    DS.attr('string'),
@@ -37,5 +37,5 @@ function setModels(params) {
     'author': Author,
     'comment': Comment,
     'someResource': SomeResource
-  }
+  };
 }
