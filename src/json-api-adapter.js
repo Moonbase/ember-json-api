@@ -47,7 +47,7 @@ DS.JsonApiAdapter = DS.RESTAdapter.extend({
    * Fix query URL.
    */
   findMany: function(store, type, ids, snapshots) {
-    return this.ajax(this.buildURL(type.typeKey, ids.join(','), snapshots, 'findMany'), 'GET');
+    return this.ajax(this.buildURL(type.modelName, ids.join(','), snapshots, 'findMany'), 'GET');
   },
 
   /**
@@ -57,11 +57,11 @@ DS.JsonApiAdapter = DS.RESTAdapter.extend({
   createRecord: function(store, type, snapshot) {
     var data = {};
 
-    data[this.pathForType(type.typeKey)] = store.serializerFor(type.typeKey).serialize(snapshot, {
+    data[this.pathForType(type.modelName)] = store.serializerFor(type.modelName).serialize(snapshot, {
       includeId: true
     });
 
-    return this.ajax(this.buildURL(type.typeKey), 'POST', {
+    return this.ajax(this.buildURL(type.modelName), 'POST', {
       data: data
     });
   },
@@ -73,11 +73,11 @@ DS.JsonApiAdapter = DS.RESTAdapter.extend({
   updateRecord: function(store, type, snapshot) {
     var data = {};
 
-    data[this.pathForType(type.typeKey)] = store.serializerFor(type.typeKey).serialize(snapshot, {
+    data[this.pathForType(type.modelName)] = store.serializerFor(type.modelName).serialize(snapshot, {
       includeId: true
     });
 
-    return this.ajax(this.buildURL(type.typeKey, snapshot.id), 'PUT', {
+    return this.ajax(this.buildURL(type.modelName, snapshot.id), 'PUT', {
       data: data
     });
   },
@@ -116,24 +116,9 @@ DS.JsonApiAdapter = DS.RESTAdapter.extend({
       return error;
     }
   },
-  /**
-    Underscores the JSON root keys when serializing.
 
-    @method serializeIntoHash
-    @param {Object} hash
-    @param {subclass of DS.Model} type
-    @param {DS.Model} record
-    @param {Object} options
-    */
-  serializeIntoHash: function(data, type, record, options) {
-    var root = underscore(decamelize(type.typeKey));
-    var snapshot = record._createSnapshot();
-    data[root] = this.serialize(snapshot, options);
-  },
-
-  pathForType: function(type) {
-    var decamelized = Ember.String.decamelize(type);
-    return Ember.String.pluralize(decamelized);
+  pathForType: function(modelName) {
+    return Ember.String.pluralize(Ember.String.underscore(modelName));
   }
 });
 

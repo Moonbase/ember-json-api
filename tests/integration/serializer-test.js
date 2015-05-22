@@ -96,49 +96,6 @@ test('serialize camelcase', function() {
   });
 });
 
-test('serialize into snake_case', function() {
-  var tom;
-
-  Ember.run(function() {
-    league = env.store.createRecord(HomePlanet, {
-      name: 'Villain League',
-      id: '123'
-    });
-
-    tom = env.store.createRecord(SuperVillain, {
-      firstName: 'Tom',
-      lastName: 'Dale',
-      homePlanet: league
-    });
-  });
-
-  env.serializer.keyForAttribute = function(key) {
-    return Ember.String.decamelize(key);
-  };
-
-  env.serializer.keyForRelationship = function(key, relationshipKind) {
-    return Ember.String.decamelize(key);
-  };
-
-  env.serializer.keyForSnapshot = function(snapshot) {
-    return Ember.String.decamelize(snapshot.typeKey);
-  };
-
-  var json = Ember.run(function() {
-    var snapshot = tom._createSnapshot();
-    return env.serializer.serialize(snapshot);
-  });
-
-  deepEqual(json, {
-    first_name: 'Tom',
-    last_name: 'Dale',
-    links: {
-      evil_minions: [],
-      home_planet: get(league, 'id')
-    }
-  });
-});
-
 test('serializeIntoHash', function() {
   var json = {};
 
@@ -163,7 +120,6 @@ test('serializeIntoHash', function() {
 });
 
 test('serializeIntoHash with decamelized types', function() {
-  HomePlanet.typeKey = 'home-planet';
   var json = {};
 
   Ember.run(function() {
@@ -326,7 +282,7 @@ test('normalize links camelized', function() {
 });
 
 test('extractSingle snake_case', function() {
-  env.container.register('adapter:superVillain', DS.ActiveModelAdapter);
+  env.registry.register('adapter:superVillain', DS.ActiveModelAdapter);
 
   var json_hash = {
     home_planet:   {
@@ -364,7 +320,7 @@ test('extractSingle snake_case', function() {
 });
 
 test('extractSingle camelCase', function() {
-  env.container.register('adapter:superVillain', DS.ActiveModelAdapter);
+  env.registry.register('adapter:superVillain', DS.ActiveModelAdapter);
 
   var json_hash = {
     home_planet:   {
@@ -396,7 +352,7 @@ test('extractSingle camelCase', function() {
 });
 
 test('extractArray snake_case', function() {
-  env.container.register('adapter:superVillain', DS.ActiveModelAdapter);
+  env.registry.register('adapter:superVillain', DS.ActiveModelAdapter);
 
   var json_hash = {
       home_planets: [{
@@ -437,7 +393,7 @@ test('extractArray snake_case', function() {
 // TODO: test something that utilizes the flattening of links in normalize
 
 test('extractArray', function() {
-  env.container.register('adapter:superVillain', DS.ActiveModelAdapter);
+  env.registry.register('adapter:superVillain', DS.ActiveModelAdapter);
 
   var json_hash = {
       home_planets: [{
@@ -477,7 +433,7 @@ test('extractArray', function() {
 });
 
 test('looking up a belongsTo association', function() {
-  env.container.register('adapter:superVillain', DS.ActiveModelAdapter);
+  env.registry.register('adapter:superVillain', DS.ActiveModelAdapter);
 
   var json_hash = {
     home_planets: [{

@@ -51,7 +51,7 @@ define("json-api-adapter",
        * Fix query URL.
        */
       findMany: function(store, type, ids, snapshots) {
-        return this.ajax(this.buildURL(type.typeKey, ids.join(','), snapshots, 'findMany'), 'GET');
+        return this.ajax(this.buildURL(type.modelName, ids.join(','), snapshots, 'findMany'), 'GET');
       },
 
       /**
@@ -61,11 +61,11 @@ define("json-api-adapter",
       createRecord: function(store, type, snapshot) {
         var data = {};
 
-        data[this.pathForType(type.typeKey)] = store.serializerFor(type.typeKey).serialize(snapshot, {
+        data[this.pathForType(type.modelName)] = store.serializerFor(type.modelName).serialize(snapshot, {
           includeId: true
         });
 
-        return this.ajax(this.buildURL(type.typeKey), 'POST', {
+        return this.ajax(this.buildURL(type.modelName), 'POST', {
           data: data
         });
       },
@@ -77,11 +77,11 @@ define("json-api-adapter",
       updateRecord: function(store, type, snapshot) {
         var data = {};
 
-        data[this.pathForType(type.typeKey)] = store.serializerFor(type.typeKey).serialize(snapshot, {
+        data[this.pathForType(type.modelName)] = store.serializerFor(type.modelName).serialize(snapshot, {
           includeId: true
         });
 
-        return this.ajax(this.buildURL(type.typeKey, snapshot.id), 'PUT', {
+        return this.ajax(this.buildURL(type.modelName, snapshot.id), 'PUT', {
           data: data
         });
       },
@@ -120,24 +120,9 @@ define("json-api-adapter",
           return error;
         }
       },
-      /**
-        Underscores the JSON root keys when serializing.
 
-        @method serializeIntoHash
-        @param {Object} hash
-        @param {subclass of DS.Model} type
-        @param {DS.Model} record
-        @param {Object} options
-        */
-      serializeIntoHash: function(data, type, record, options) {
-        var root = underscore(decamelize(type.typeKey));
-        var snapshot = record._createSnapshot();
-        data[root] = this.serialize(snapshot, options);
-      },
-
-      pathForType: function(type) {
-        var decamelized = Ember.String.decamelize(type);
-        return Ember.String.pluralize(decamelized);
+      pathForType: function(modelName) {
+        return Ember.String.pluralize(Ember.String.underscore(modelName));
       }
     });
 
@@ -164,7 +149,11 @@ define("json-api-adapter",
 
     DS.JsonApiSerializer = DS.RESTSerializer.extend({
       keyForRelationship: function(key) {
-        return key;
+        return Ember.String.camelize(key);
+      },
+
+      keyForSnapshot: function(snapshot) {
+        return snapshot.modelName;
       },
       /**
        * Patch the extractSingle method, since there are no singular records
@@ -172,9 +161,9 @@ define("json-api-adapter",
       extractSingle: function(store, primaryType, payload, recordId, requestType) {
         var primaryTypeName;
         if (this.keyForAttribute) {
-          primaryTypeName = this.keyForAttribute(primaryType.typeKey);
+          primaryTypeName = this.keyForAttribute(primaryType.modelName);
         } else {
-          primaryTypeName = primaryType.typeKey;
+          primaryTypeName = primaryType.modelName;
         }
 
         var json = {};
@@ -303,26 +292,27 @@ define("json-api-adapter",
       serializeBelongsTo: function(record, json, relationship) {
         var attr = relationship.key;
         var belongsTo = record.belongsTo(attr);
-        var type = this.keyForRelationship(relationship.type.typeKey);
-        var key = this.keyForRelationship(attr);
 
         if (isNone(belongsTo)) return;
 
+        var type = this.keyForSnapshot(belongsTo);
+        var key = this.keyForRelationship(attr);
+
         json.links = json.links || {};
-        json.links[key] = belongsToLink(key, type, get(belongsTo, 'id'));
+        json.links[key] = belongsToLink(key, Ember.String.camelize(type), get(belongsTo, 'id'));
       },
 
       /**
        * Use "links" key
        */
-      serializeHasMany: function(record, json, relationship) {
+      serializeHasMany: function(snapshot, json, relationship) {
         var attr = relationship.key;
-        var type = this.keyForRelationship(relationship.type.typeKey);
+        var type = this.keyForRelationship(relationship.type.modelName);
         var key = this.keyForRelationship(attr);
 
         if (relationship.kind === 'hasMany') {
           json.links = json.links || {};
-          json.links[key] = hasManyLink(key, type, record, attr);
+          json.links[key] = hasManyLink(key, Ember.String.camelize(type), snapshot, attr);
         }
       }
     });
@@ -338,13 +328,17 @@ define("json-api-adapter",
       return link;
     }
 
-    function hasManyLink(key, type, record, attr) {
-      var link = record.hasMany(attr).mapBy('id');
-      if (link && key !== Ember.String.pluralize(type)) {
-        link = {
-          ids: link,
-          type: type
-        };
+    function hasManyLink(key, type, snapshot, attr) {
+      var ids;
+      var link = snapshot.hasMany(attr) || [];
+      if (link) {
+        ids = link.mapBy('id');
+        if (ids && key !== Ember.String.pluralize(type)) {
+          link = {
+            ids: ids,
+            type: type
+          };
+        }
       }
       return link;
     }

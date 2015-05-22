@@ -3,10 +3,11 @@ var isNone = Ember.isNone;
 
 DS.JsonApiSerializer = DS.RESTSerializer.extend({
   keyForRelationship: function(key) {
-    return key;
+    return Ember.String.camelize(key);
   },
+
   keyForSnapshot: function(snapshot) {
-    return snapshot.typeKey;
+    return snapshot.modelName;
   },
   /**
    * Patch the extractSingle method, since there are no singular records
@@ -14,9 +15,9 @@ DS.JsonApiSerializer = DS.RESTSerializer.extend({
   extractSingle: function(store, primaryType, payload, recordId, requestType) {
     var primaryTypeName;
     if (this.keyForAttribute) {
-      primaryTypeName = this.keyForAttribute(primaryType.typeKey);
+      primaryTypeName = this.keyForAttribute(primaryType.modelName);
     } else {
-      primaryTypeName = primaryType.typeKey;
+      primaryTypeName = primaryType.modelName;
     }
 
     var json = {};
@@ -152,20 +153,20 @@ DS.JsonApiSerializer = DS.RESTSerializer.extend({
     var key = this.keyForRelationship(attr);
 
     json.links = json.links || {};
-    json.links[key] = belongsToLink(key, type, get(belongsTo, 'id'));
+    json.links[key] = belongsToLink(key, Ember.String.camelize(type), get(belongsTo, 'id'));
   },
 
   /**
    * Use "links" key
    */
-  serializeHasMany: function(record, json, relationship) {
+  serializeHasMany: function(snapshot, json, relationship) {
     var attr = relationship.key;
-    var type = this.keyForRelationship(relationship.type.typeKey);
+    var type = this.keyForRelationship(relationship.type.modelName);
     var key = this.keyForRelationship(attr);
 
     if (relationship.kind === 'hasMany') {
       json.links = json.links || {};
-      json.links[key] = hasManyLink(key, type, record, attr);
+      json.links[key] = hasManyLink(key, Ember.String.camelize(type), snapshot, attr);
     }
   }
 });
@@ -181,13 +182,17 @@ function belongsToLink(key, type, value) {
   return link;
 }
 
-function hasManyLink(key, type, record, attr) {
-  var link = record.hasMany(attr).mapBy('id');
-  if (link && key !== Ember.String.pluralize(type)) {
-    link = {
-      ids: link,
-      type: type
-    };
+function hasManyLink(key, type, snapshot, attr) {
+  var ids;
+  var link = snapshot.hasMany(attr) || [];
+  if (link) {
+    ids = link.mapBy('id');
+    if (ids && key !== Ember.String.pluralize(type)) {
+      link = {
+        ids: ids,
+        type: type
+      };
+    }
   }
   return link;
 }
