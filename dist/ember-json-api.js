@@ -183,20 +183,24 @@ define("json-api-adapter",
       /**
        * Flatten links
        */
-      normalize: function(type, hash, prop) {
-        var json = {};
+       normalize: function(type, hash, prop) {
+        var json = this.normalizeLinks(hash);
+        return this._super(type, json, prop);
+      },
+
+      normalizeLinks: function(hash) {
         for (var key in hash) {
           if (key !== 'links') {
             var camelizedKey = Ember.String.camelize(key);
             json[camelizedKey] = hash[key];
-          } else if (typeof hash[key] === 'object') {
+          } else if (Ember.typeOf(hash[key]) === 'object') {
             for (var link in hash[key]) {
               var linkValue = hash[key][link];
               link = Ember.String.camelize(link);
-              if (linkValue && typeof linkValue === 'object' && linkValue.href) {
+              if (linkValue && Ember.typeOf(linkValue) === 'object' && linkValue.href) {
                 json.links = json.links || {};
                 json.links[link] = linkValue.href;
-              } else if (linkValue && typeof linkValue === 'object' && linkValue.ids) {
+              } else if (linkValue && Ember.typeOf(linkValue) === 'object' && linkValue.ids) {
                 json[link] = linkValue.ids;
               } else {
                 json[link] = linkValue;
@@ -231,7 +235,7 @@ define("json-api-adapter",
        */
       extractLinked: function(linked) {
         var link, values, value, relation;
-        var store = get(this, 'store');
+        var store = get(this, 'store') || this.container.lookup('store:main');
 
         for (link in linked) {
           values = linked[link];
@@ -239,6 +243,7 @@ define("json-api-adapter",
             value = values[i];
 
             if (value.links) {
+              value = this.normalizeLinks(value);
               for (relation in value.links) {
                 value[relation] = value.links[relation];
               }
