@@ -11,7 +11,6 @@ window.setupStore = function(options) {
     registry = env.registry = container;
   }
 
-
   var adapter = env.adapter = options.adapter || DS.JsonApiAdapter;
   var serializer = env.serializer = options.serializer || DS.JsonApiSerializer;
 
@@ -22,8 +21,9 @@ window.setupStore = function(options) {
     registry.register('model:' + Ember.String.dasherize(prop), options[prop]);
   }
 
+  registry.register('adapter:-custom', adapter);
   registry.register('store:main', DS.Store.extend({
-    adapter: adapter
+    adapter: '-custom'
   }));
 
   registry.register('serializer:application', serializer);
