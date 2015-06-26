@@ -184,9 +184,8 @@ function belongsToLink(key, type, value) {
 
 function hasManyLink(key, type, snapshot, attr) {
   var ids;
-  var link = snapshot.hasMany(attr) || [];
+  var link = snapshot.hasMany(attr, {ids: true}) || [];
   if (link) {
-    ids = link.mapBy('id');
     if (ids && key !== Ember.String.pluralize(type)) {
       link = {
         ids: ids,
