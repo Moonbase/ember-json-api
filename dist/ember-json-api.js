@@ -183,12 +183,13 @@ define("json-api-adapter",
       /**
        * Flatten links
        */
-       normalize: function(type, hash, prop) {
+      normalize: function(type, hash, prop) {
         var json = this.normalizeLinks(hash);
         return this._super(type, json, prop);
       },
 
       normalizeLinks: function(hash) {
+        var json = {};
         for (var key in hash) {
           if (key !== 'links') {
             var camelizedKey = Ember.String.camelize(key);
@@ -208,7 +209,7 @@ define("json-api-adapter",
             }
           }
         }
-        return this._super(type, json, prop);
+        return json;
       },
 
       /**
@@ -298,7 +299,9 @@ define("json-api-adapter",
         var attr = relationship.key;
         var belongsTo = record.belongsTo(attr);
 
-        if (isNone(belongsTo)) return;
+        if (isNone(belongsTo)) {
+          return;
+        }
 
         var type = this.keyForSnapshot(belongsTo);
         var key = this.keyForRelationship(attr);
@@ -334,10 +337,10 @@ define("json-api-adapter",
     }
 
     function hasManyLink(key, type, snapshot, attr) {
-      var ids;
-      var link = snapshot.hasMany(attr, {ids: true}) || [];
-      if (link) {
-        if (ids && key !== Ember.String.pluralize(type)) {
+      var ids = snapshot.hasMany(attr, {ids: true}) || [];
+      var link = ids;
+      if (ids) {
+        if (key !== Ember.String.pluralize(type)) {
           link = {
             ids: ids,
             type: type

@@ -12,7 +12,7 @@ module('integration/ember-json-api-adapter - serializer', {
     MegaVillain = DS.Model.extend({
       firstName:     DS.attr('string'),
       lastName:      DS.attr('string'),
-      minions:   DS.hasMany('blueMinion'),
+      minions:   DS.hasMany('blueMinion')
     });
 
     HomePlanet = DS.Model.extend({
@@ -25,7 +25,7 @@ module('integration/ember-json-api-adapter - serializer', {
     });
 
     EvilMinion = Minion.extend({
-      superVillain: DS.belongsTo('superVillain'),
+      superVillain: DS.belongsTo('superVillain')
     });
 
     YellowMinion = EvilMinion.extend();
