@@ -1,5 +1,9 @@
 ## CHANGELOG
 
+### 0.19.1
+
+* Updated to ember data v1.0.0.beta-19.1
+
 ### 0.3.0
 
 * removes deprecation warning because of DS' snapshots

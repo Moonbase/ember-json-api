@@ -34,8 +34,8 @@ asyncTest('GET /posts', function() {
   fakeServer.get('/posts', responses.posts_list);
 
   env.store.find('post').then(function(record) {
-    var post1 = record.get("firstObject"),
-        post2 = record.get("lastObject");
+    var post1 = record.get('firstObject'),
+        post2 = record.get('lastObject');
 
     equal(post1.get('id'), '1', 'id is correct');
     equal(post1.get('title'), 'Rails is Omakase', 'title is correct');

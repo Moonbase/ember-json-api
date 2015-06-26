@@ -161,12 +161,12 @@ DS.JsonApiSerializer = DS.RESTSerializer.extend({
    */
   serializeHasMany: function(snapshot, json, relationship) {
     var attr = relationship.key;
-    var type = this.keyForRelationship(relationship.type.modelName);
+    var type = this.keyForRelationship(relationship.type);
     var key = this.keyForRelationship(attr);
 
     if (relationship.kind === 'hasMany') {
       json.links = json.links || {};
-      json.links[key] = hasManyLink(key, Ember.String.camelize(type), snapshot, attr);
+      json.links[key] = hasManyLink(key, type, snapshot, attr);
     }
   }
 });
@@ -184,9 +184,8 @@ function belongsToLink(key, type, value) {
 
 function hasManyLink(key, type, snapshot, attr) {
   var ids;
-  var link = snapshot.hasMany(attr) || [];
+  var link = snapshot.hasMany(attr, {ids: true}) || [];
   if (link) {
-    ids = link.mapBy('id');
     if (ids && key !== Ember.String.pluralize(type)) {
       link = {
         ids: ids,

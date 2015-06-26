@@ -42,7 +42,7 @@ asyncTest("POST /posts/1 won't push an array", function() {
   fakeServer.post('/posts', request, responses.post);
 
   Em.run(function() {
-    var post = env.store.createRecord(models.post, { title: 'Rails is Omakase' });
+    var post = env.store.createRecord('post', { title: 'Rails is Omakase' });
 
     post.save().then(function(record) {
       equal(record.get('id'), '1', 'id is correct');
